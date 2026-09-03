@@ -28,6 +28,12 @@ def brief_ep(x_claw_token: str = Header(default="")):
     from claw import journalist
     return {"briefing": journalist.brief()}
 
+@app.post("/investigate")
+def investigate_ep(c: Chat, x_claw_token: str = Header(default="")):
+    auth(x_claw_token)
+    from claw import journalist
+    return {"investigation": journalist.investigate(c.message)}
+
 @app.post("/chat")
 def chat(c: Chat, x_claw_token: str = Header(default="")):
     auth(x_claw_token)

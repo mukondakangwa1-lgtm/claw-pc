@@ -49,6 +49,11 @@ def run():
         results.append(("newsdesk(osiris)", rr.ok, "osiris api up" if rr.ok else f"HTTP {rr.status_code}"))
     except Exception as e:
         results.append(("newsdesk(osiris)", False, f"unreachable ({e.__class__.__name__})"))
+    try:
+        _rr = _rq.get("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", timeout=12)
+        results.append(("intel-feeds(cisa-kev)", _rr.ok, "KEV feed up" if _rr.ok else f"HTTP {_rr.status_code}"))
+    except Exception as _e2:
+        results.append(("intel-feeds(cisa-kev)", False, f"unreachable ({_e2.__class__.__name__})"))
     results.append(("gateway-token", bool(cfg["gateway_token"]), "token configured" if cfg["gateway_token"] else "missing"))
     git_dir = pathlib.Path.home() / "claw" / ".git"
     results.append(("git(self-edit rails)", git_dir.exists(), "repo present" if git_dir.exists() else "not a git repo yet"))

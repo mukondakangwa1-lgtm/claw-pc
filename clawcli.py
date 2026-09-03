@@ -4,7 +4,7 @@ import argparse, pathlib, sys
 sys.path.insert(0, str(pathlib.Path.home() / "claw"))
 from claw import config, memory, brain, tools, doctor, selfcare, journalist
 
-BANNER = """🐾 CLAW-PC v2-core — 'exit' to quit | '/remember <k> <v>' '/facts' '/clear' | newsdesk: '/brief' '/news <q>' '/osint <d>' '/map'"""
+BANNER = """🐾 CLAW-PC v2-core — 'exit' to quit | '/remember <k> <v>' '/facts' '/clear' | newsdesk: '/brief' '/news <q>' '/osint <d>' '/map' '/investigate <q>'"""
 
 def do_chat(args):
     print(BANNER)
@@ -30,6 +30,8 @@ def do_chat(args):
             print(journalist.osint(line[7:])); continue
         if line == "/map":
             print(journalist.map_url()); continue
+        if line.startswith("/investigate "):
+            print(journalist.investigate(line[13:])); continue
         memory.add_message("user", line)
         reply, which = brain.think(line)
         memory.add_message("assistant", reply)
@@ -47,6 +49,7 @@ def main():
     p = sub.add_parser("news"); p.add_argument("query", nargs="?", default="")
     p = sub.add_parser("osint"); p.add_argument("subject")
     p = sub.add_parser("map"); p.add_argument("layers", nargs="?", default="")
+    p = sub.add_parser("investigate"); p.add_argument("question")
     p = sub.add_parser("remember"); p.add_argument("key"); p.add_argument("value")
     p = sub.add_parser("facts"); p.add_argument("query", nargs="?", default="")
     a = ap.parse_args()
@@ -74,6 +77,7 @@ def main():
         uvicorn.run("claw.gateway:app", host="0.0.0.0", port=int(cfg["gateway_port"]), log_level="warning")
     elif a.cmd == "brief": print(journalist.brief(a.focus))
     elif a.cmd == "news": print("\n".join(journalist.news(a.query)))
+    elif a.cmd == "investigate": print(journalist.investigate(a.question))
     elif a.cmd == "osint": print(journalist.osint(a.subject))
     elif a.cmd == "map": print(journalist.map_url(a.layers or None))
     elif a.cmd == "remember": memory.remember(a.key, a.value); print("🧠 stored")
