@@ -1,0 +1,2 @@
+#!/usr/bin/env bash
+exec "$HOME/claw/venv/bin/python" "$HOME/claw/clawcli.py" "$@"
