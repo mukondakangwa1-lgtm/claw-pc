@@ -35,6 +35,43 @@ def sky_ep(x_claw_token: str = Header(default="")):
     auth(x_claw_token)
     from claw import beyond
     return {"dsn": beyond.dsn(), "space": beyond.space()}
+@app.post("/visual")
+def visual_ep(c: Chat, x_claw_token: str = Header(default="")):
+    auth(x_claw_token)
+    import glob as _glob, os as _os
+    from claw import brain, memory
+    from claw.beyond import _root as _broot
+    msg = (c.message or "").strip()
+    low = msg.lower()
+    image = None
+    try:
+        if "sun" in low or "solar" in low:
+            from claw import beyond as _beyond
+            _beyond.sun()
+            suns = sorted(_glob.glob(str(_broot() / "memory" / "beyond" / "sun-*.png")))
+            if suns:
+                image = _os.path.basename(suns[-1])
+        elif any(k in low for k in ("show me", "picture", "photo", "image", "visual", "media")):
+            cands = []
+            for pat in ("workspace/media/*.png", "workspace/media/*.jpg", "workspace/media/*.jpeg",
+                        "memory/beyond/sun-*.png"):
+                cands += _glob.glob(str(_broot() / pat))
+            if cands:
+                image = _os.path.basename(max(cands, key=_os.path.getmtime))
+    except Exception:
+        image = None
+    reply, which = brain.think(msg)
+    memory.add_message("user", msg)
+    memory.add_message("assistant", reply)
+    if "map" in low:
+        try:
+            from claw import journalist
+            reply = reply + "\nlive map: " + journalist.map_url()
+        except Exception:
+            pass
+    return {"reply": reply, "brain": which, "image": image}
+
+
 
 @app.get("/brief")
 def brief_ep(x_claw_token: str = Header(default="")):
