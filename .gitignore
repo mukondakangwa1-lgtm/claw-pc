@@ -1,6 +1,8 @@
 venv/
-memory/*.db
-logs/
 __pycache__/
-config.toml
-*.db
+*.pyc
+.venv/
+uploads/
+.env
+*.key
+*.token
