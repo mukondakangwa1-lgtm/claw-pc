@@ -4,8 +4,8 @@ gateway_port = 8787
 gateway_token = "28bab12dae487ba2f74a4706bce54efd"
 
 # Brain 1 (online): Groq — paste key here or: export CLAW_GROQ_KEY=gsk_...
-groq_api_key = ""
-groq_model = "llama-3.3-70b-versatile"
+groq_api_key = "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"
+groq_model = "openai/gpt-oss-120b"
 
 # Brain 2 (offline fallback): Ollama — install via claw-host-setup.sh
 ollama_url = "http://localhost:11434"
