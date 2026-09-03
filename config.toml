@@ -1,7 +1,7 @@
 # CLAW-PC configuration
 node_name = "claw-pc"
 gateway_port = 8787
-gateway_token = "d303c8b631b5ab71a099998b87d0b806"
+gateway_token = "1430e9caefd84a6a6fe076e4370b92a9"
 
 # Brain 1 (online): Groq — paste key here or: export CLAW_GROQ_KEY=gsk_...
 groq_api_key = "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"
