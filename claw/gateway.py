@@ -40,6 +40,12 @@ def investigate_ep(c: Chat, x_claw_token: str = Header(default="")):
     from claw import journalist
     return {"investigation": journalist.investigate(c.message)}
 
+@app.post("/stop")
+def stop_ep(x_claw_token: str = Header(default="")):
+    auth(x_claw_token)
+    import os as _os
+    _os._exit(0)
+
 @app.post("/chat")
 def chat(c: Chat, x_claw_token: str = Header(default="")):
     auth(x_claw_token)
