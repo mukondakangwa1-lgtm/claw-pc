@@ -3,8 +3,9 @@
 import argparse, pathlib, sys
 sys.path.insert(0, str(pathlib.Path.home() / "claw"))
 from claw import config, memory, brain, tools, doctor, selfcare, journalist
+from claw import beyond
 
-BANNER = """🐾 CLAW-PC v2-core — 'exit' to quit | '/remember <k> <v>' '/facts' '/clear' | newsdesk: '/brief' '/news <q>' '/osint <d>' '/map' '/investigate <q>'"""
+BANNER = """🐾 CLAW-PC v2-core — 'exit' to quit | '/remember <k> <v>' '/facts' '/clear' | newsdesk: '/brief' '/news <q>' '/osint <d>' '/map' '/investigate <q>' | beyond: '/dsn' '/whereis <craft>' '/overhead' '/sun' '/space' '/skylog'"""
 
 def do_chat(args):
     print(BANNER)
@@ -32,6 +33,18 @@ def do_chat(args):
             print(journalist.map_url()); continue
         if line.startswith("/investigate "):
             print(journalist.investigate(line[13:])); continue
+        if line == "/dsn":
+            print(beyond.dsn()); continue
+        if line.startswith("/whereis "):
+            print(beyond.whereis(line[9:])); continue
+        if line == "/overhead":
+            print(beyond.overhead()); continue
+        if line == "/sun":
+            print(beyond.sun()); continue
+        if line == "/space":
+            print(beyond.space()); continue
+        if line == "/skylog":
+            print("\n".join(beyond.skylog())); continue
         memory.add_message("user", line)
         reply, which = brain.think(line)
         memory.add_message("assistant", reply)
@@ -50,6 +63,9 @@ def main():
     p = sub.add_parser("osint"); p.add_argument("subject")
     p = sub.add_parser("map"); p.add_argument("layers", nargs="?", default="")
     p = sub.add_parser("investigate"); p.add_argument("question")
+    sub.add_parser("dsn"); sub.add_parser("overhead"); sub.add_parser("sun"); sub.add_parser("space")
+    p = sub.add_parser("whereis"); p.add_argument("name", nargs="?", default="voyager2")
+    p = sub.add_parser("skylog"); p.add_argument("kind", nargs="?", default="")
     p = sub.add_parser("remember"); p.add_argument("key"); p.add_argument("value")
     p = sub.add_parser("facts"); p.add_argument("query", nargs="?", default="")
     a = ap.parse_args()
@@ -80,6 +96,12 @@ def main():
     elif a.cmd == "investigate": print(journalist.investigate(a.question))
     elif a.cmd == "osint": print(journalist.osint(a.subject))
     elif a.cmd == "map": print(journalist.map_url(a.layers or None))
+    elif a.cmd == "dsn": print(beyond.dsn())
+    elif a.cmd == "whereis": print(beyond.whereis(a.name))
+    elif a.cmd == "overhead": print(beyond.overhead())
+    elif a.cmd == "sun": print(beyond.sun())
+    elif a.cmd == "space": print(beyond.space())
+    elif a.cmd == "skylog": print("\n".join(beyond.skylog(a.kind)))
     elif a.cmd == "remember": memory.remember(a.key, a.value); print("🧠 stored")
     elif a.cmd == "facts":
         rows = memory.recall(a.query)

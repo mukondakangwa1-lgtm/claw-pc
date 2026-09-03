@@ -22,6 +22,12 @@ def health(x_claw_token: str = Header(default="")):
     cfg = config.load()
     return {"status": "ok", "node": cfg["node_name"], "version": __import__("claw").VERSION}
 
+@app.get("/sky")
+def sky_ep(x_claw_token: str = Header(default="")):
+    auth(x_claw_token)
+    from claw import beyond
+    return {"dsn": beyond.dsn(), "space": beyond.space()}
+
 @app.get("/brief")
 def brief_ep(x_claw_token: str = Header(default="")):
     auth(x_claw_token)

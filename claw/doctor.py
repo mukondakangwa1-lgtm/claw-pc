@@ -54,6 +54,11 @@ def run():
         results.append(("intel-feeds(cisa-kev)", _rr.ok, "KEV feed up" if _rr.ok else f"HTTP {_rr.status_code}"))
     except Exception as _e2:
         results.append(("intel-feeds(cisa-kev)", False, f"unreachable ({_e2.__class__.__name__})"))
+    try:
+        _r3 = _rq.get("https://eyes.nasa.gov/dsn/data/dsn.xml", timeout=12)
+        results.append(("beyond(dsn)", _r3.ok, "DSN feed up" if _r3.ok else f"HTTP {_r3.status_code}"))
+    except Exception as _e3:
+        results.append(("beyond(dsn)", False, f"unreachable ({_e3.__class__.__name__})"))
     results.append(("gateway-token", bool(cfg["gateway_token"]), "token configured" if cfg["gateway_token"] else "missing"))
     git_dir = pathlib.Path.home() / "claw" / ".git"
     results.append(("git(self-edit rails)", git_dir.exists(), "repo present" if git_dir.exists() else "not a git repo yet"))

@@ -13,3 +13,8 @@ ollama_model = "qwen2.5-coder:1.5b"
 
 # Newsdesk: OSIRIS intelligence platform (keyless read API)
 osiris_base = "https://osirisai.live"
+
+# BEYOND desk: where on Earth are you? (satellite pass geometry)
+observer_city = "Lusaka"
+observer_lat = -15.42
+observer_lon = 28.28
