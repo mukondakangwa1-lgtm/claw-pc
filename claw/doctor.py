@@ -43,6 +43,12 @@ def run():
     except Exception as e: results.append(("dns", False, f"DNS broken ({e.__class__.__name__})"))
     g_ok, g_msg = _check_groq(cfg); results.append(("brain:groq", g_ok, g_msg))
     o_ok, o_msg = _check_ollama(cfg); results.append(("brain:ollama", o_ok, o_msg))
+    try:
+        import requests as _rq
+        rr = _rq.get(cfg.get("osiris_base", "https://osirisai.live").rstrip("/") + "/api/health", timeout=10)
+        results.append(("newsdesk(osiris)", rr.ok, "osiris api up" if rr.ok else f"HTTP {rr.status_code}"))
+    except Exception as e:
+        results.append(("newsdesk(osiris)", False, f"unreachable ({e.__class__.__name__})"))
     results.append(("gateway-token", bool(cfg["gateway_token"]), "token configured" if cfg["gateway_token"] else "missing"))
     git_dir = pathlib.Path.home() / "claw" / ".git"
     results.append(("git(self-edit rails)", git_dir.exists(), "repo present" if git_dir.exists() else "not a git repo yet"))

@@ -10,3 +10,6 @@ groq_model = "openai/gpt-oss-120b"
 # Brain 2 (offline fallback): Ollama — install via claw-host-setup.sh
 ollama_url = "http://localhost:11434"
 ollama_model = "qwen2.5-coder:1.5b"
+
+# Newsdesk: OSIRIS intelligence platform (keyless read API)
+osiris_base = "https://osirisai.live"
