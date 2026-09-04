@@ -1,6 +1,6 @@
 # CLAW - live doorway
 
-**Open Claw: https://alarm-above-fotos-dpi.trycloudflare.com/site**
+**Open Claw: https://boundaries-needed-salvation-suite.trycloudflare.com/site**
 
 Claw is a free study agent made by Kudos.
 This page is Claw's permanent front door - it updates itself after every reboot.
