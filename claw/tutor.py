@@ -997,3 +997,169 @@ def chat(handle, msg):
         extra_context="MESSAGE: " + msg)
     return reply + _NUDGE, which, ""
 
+# +++ v5.6 session store + time/place aware chat +++
+# knows each student's local time & approximate place (browser timezone, no GPS),
+# remembers the conversation, archives every session, resumes any one on tap.
+_SESS_GAP = 6 * 3600
+_ZCITY = {"Lusaka": "Lusaka, Zambia", "Harare": "Harare, Zimbabwe", "Johannesburg": "Johannesburg, South Africa", "Pretoria": "Pretoria, South Africa", "Nairobi": "Nairobi, Kenya", "Kigali": "Kigali, Rwanda", "Gaborone": "Gaborone, Botswana", "Lilongwe": "Lilongwe, Malawi", "Blantyre": "Blantyre, Malawi", "Dar es Salaam": "Dar es Salaam, Tanzania", "Kinshasa": "Kinshasa, DR Congo", "Lagos": "Lagos, Nigeria", "Accra": "Accra, Ghana", "Addis Ababa": "Addis Ababa, Ethiopia", "Cairo": "Cairo, Egypt", "Casablanca": "Casablanca, Morocco", "Maputo": "Maputo, Mozambique", "Windhoek": "Windhoek, Namibia", "Kampala": "Kampala, Uganda", "London": "London, UK", "Dublin": "Dublin, Ireland", "Lisbon": "Lisbon, Portugal", "Paris": "Paris, France", "Berlin": "Berlin, Germany", "Madrid": "Madrid, Spain", "Rome": "Rome, Italy", "New York": "New York, USA", "Chicago": "Chicago, USA", "Denver": "Denver, USA", "Los Angeles": "Los Angeles, USA", "Toronto": "Toronto, Canada", "Vancouver": "Vancouver, Canada", "Sao Paulo": "Sao Paulo, Brazil", "Dubai": "Dubai, UAE", "Riyadh": "Riyadh, Saudi Arabia", "Doha": "Doha, Qatar", "Karachi": "Karachi, Pakistan", "Kolkata": "Kolkata, India", "Mumbai": "Mumbai, India", "Delhi": "Delhi, India", "Dhaka": "Dhaka, Bangladesh", "Bangkok": "Bangkok, Thailand", "Jakarta": "Jakarta, Indonesia", "Singapore": "Singapore", "Hong Kong": "Hong Kong", "Shanghai": "Shanghai, China", "Beijing": "Beijing, China", "Seoul": "Seoul, South Korea", "Tokyo": "Tokyo, Japan", "Sydney": "Sydney, Australia", "Melbourne": "Melbourne, Australia", "Auckland": "Auckland, New Zealand"}
+
+def _sess_dir():
+    d = Path(__file__).resolve().parent.parent / "memory" / "sessions"
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+    return d
+
+def _safe_handle(h):
+    return _re.sub(r"[^A-Za-z0-9_.-]", "", (h or "student")[:40]) or "student"
+
+def _sess_load(h):
+    try:
+        return json.loads((_sess_dir() / (h + ".json")).read_text(encoding="utf-8"))
+    except Exception:
+        return []
+
+def _sess_save(h, ss):
+    try:
+        p = _sess_dir() / (h + ".json")
+        tmp = p.with_name(p.name + ".tmp")
+        tmp.write_text(json.dumps(ss[-30:], ensure_ascii=False)[:400000], encoding="utf-8")
+        tmp.replace(p)
+    except Exception:
+        pass
+
+def _sess_active(h):
+    ss = _sess_load(h)
+    if ss:
+        try:
+            import time as _t56
+            if _t56.time() - float(ss[-1].get("ts", 0)) < _SESS_GAP:
+                return ss, ss[-1]
+        except Exception:
+            pass
+        return ss, None
+    return ss, None
+
+def sessions_list(handle):
+    h = _safe_handle(handle)
+    ss, act = _sess_active(h)
+    out = []
+    for s in ss[-20:]:
+        first = ""
+        if s.get("m"):
+            first = str(s["m"][0].get("t", ""))[:70]
+        try:
+            when = datetime.fromtimestamp(float(s.get("ts", 0))).strftime("%a %d %b %H:%M")
+        except Exception:
+            when = ""
+        out.append({"id": s.get("id", ""), "n": len(s.get("m", [])), "when": when,
+                    "first": first, "active": bool(act and s.get("id") == act.get("id"))})
+    return out
+
+def session_msgs(handle, sid):
+    ss, _a = _sess_active(_safe_handle(handle))
+    for s in ss:
+        if s.get("id") == sid:
+            return s.get("m", [])
+    return None
+
+def _place(tz):
+    try:
+        city = str(tz).split("/")[-1].replace("_", " ").strip()
+        return _ZCITY.get(city, city)
+    except Exception:
+        return ""
+
+def _clock(tz):
+    from datetime import datetime as _dt
+    zname = ""
+    try:
+        from zoneinfo import ZoneInfo
+        if tz:
+            z = ZoneInfo(tz)
+            zname = z.zone
+            n = _dt.now(z)
+        else:
+            n = _dt.now()
+    except Exception:
+        n = _dt.now()
+    h = n.hour
+    part = "morning" if 5 <= h < 12 else ("afternoon" if 12 <= h < 18 else ("evening" if 18 <= h < 22 else "night"))
+    return n.strftime("%A %d %B %Y, %H:%M"), part, zname
+
+_LAST_SID = ""
+
+def chat(handle, msg, tz="", sid=""):
+    """v5.6: knows time+place, remembers the conversation, archives sessions."""
+    global _LAST_SID
+    st = _student(handle)
+    enrolled = bool(st.get("program") or st.get("level") or st.get("body"))
+    low = (msg or "").lower()
+    h = _safe_handle(handle)
+    ss, act = _sess_active(h)
+    if sid:
+        for s in ss:
+            if s.get("id") == sid:
+                act = s
+                break
+    if act is None:
+        import time as _t56a
+        act = {"id": datetime.utcnow().strftime("%Y%m%d%H%M%S") + "-" + h[:8],
+               "ts": _t56a.time(), "m": []}
+        ss.append(act)
+    _LAST_SID = act.get("id", "")
+    clock, part, zone = _clock(tz)
+    place = _place(tz)
+    ctx = ""
+    if act.get("m"):
+        ctx = "Conversation so far in this session (oldest first):\n" + "\n".join(
+            ("student: " if x.get("w") == "you" else "claw: ") + str(x.get("t", ""))[:400]
+            for x in act["m"][-14:])
+    act.setdefault("m", []).append({"w": "you", "t": str(msg)[:1500],
+                                    "at": datetime.now().strftime("%d %b %H:%M")})
+    who = str(handle or "student")[:40]
+    prof = ""
+    if enrolled:
+        bits = [str(st.get(k, "")) for k in ("program", "year", "institution", "body")]
+        prof = " Student profile: " + ", ".join(b for b in bits if b and b != "None") + "."
+    where = ""
+    if zone:
+        guess = ""
+        if place and place.split(",")[0] != zone.split("/")[-1].replace("_", " "):
+            guess = ", likely near " + place
+        where = (" You know the student's local time is " + clock + " (" + part + ", timezone "
+                 + zone + guess + "). Greet by part of day, use their time and date naturally "
+                 "when it helps, but never claim to track their exact location.")
+    if any(k in low for k in ("quiz me", "quiz on", "test me")):
+        r = quiz(handle, msg)
+        reply = r + ("" if enrolled else _NUDGE)
+        w, img = "tutor-quiz", ""
+    else:
+        wants_study = any(k in low for k in ("teach", "lesson", "plan me", "syllabus",
+                                             "past paper", "revise", "explain", "show me",
+                                             "picture", "diagram"))
+        if wants_study:
+            reply, w, img = teach(handle, msg)
+            if not enrolled:
+                reply = reply + _NUDGE
+        else:
+            persona = ("You are CLAW (created by Kudos - never name any other maker). You are "
+                       "chatting with " + who + " on your public study site." + prof + where +
+                       " Understand each student as an individual: build on what they told you "
+                       "earlier in this conversation, remember their subjects and worries, and "
+                       "reply warmly in clean professional markdown: short paragraphs, bold for key terms, and a proper markdown table (| like | this |) whenever you compare or list facts - never jumble pipe rows into running text. Never write --- horizontal rules or <br> tags - separate items inside a table cell with ' • '. Keep any single reply under about 400 words - give the most important table first, then offer: say continue for the next part. Write any list of points as markdown list lines (- one point per line) so they render as bullets. Stay honest; no lectures.")
+            ec = ("MESSAGE: " + str(msg)) if not ctx else (ctx + "\nMESSAGE: " + str(msg))
+            reply, w = brain.think(persona, extra_context=ec)
+            img = ""
+    import time as _t56b
+    try:
+        act["m"].append({"w": "claw", "t": str(reply)[:1500],
+                         "at": datetime.now().strftime("%d %b %H:%M")})
+        act["m"] = act["m"][-300:]
+        act["ts"] = _t56b.time()
+        _sess_save(h, ss)
+    except Exception:
+        pass
+    return reply, w, img
+

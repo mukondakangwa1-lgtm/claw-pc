@@ -6,3 +6,4 @@ uploads/
 .env
 *.key
 *.token
+memory/sessions/
