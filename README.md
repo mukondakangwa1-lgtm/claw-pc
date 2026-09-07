@@ -1,6 +1,6 @@
 # CLAW - live doorway
 
-**Open Claw: https://walker-safer-scientific-eligibility.trycloudflare.com/site**
+**Open Claw: https://pavilion-wow-spectrum-limited.trycloudflare.com/site**
 
 Claw is a free study agent made by Kudos.
 This page is Claw's permanent front door - it updates itself after every reboot.
