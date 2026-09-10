@@ -1,6 +1,6 @@
 # CLAW - live doorway
 
-**Open Claw: https://stopped-chris-parents-corn.trycloudflare.com/site**
+**Open Claw: https://matter-substantial-tyler-riders.trycloudflare.com/site**
 
 Claw is a free study agent made by Kudos.
 This page is Claw's permanent front door - it updates itself after every reboot.
